@@ -1,0 +1,10 @@
+---
+ansible_connection: network_cli
+ansible_user: kamil
+ansible_password: cisco
+ansible_network_os: cisco.ios.ios
+ansible_python_interpreter: "/home/kamil/aenv/ansible_env/bin/python"
+
+ntp:
+  servers:
+  - ip: 192.168.78.148

@@ -1,0 +1,19 @@
+---
+- name: Generate config from Jinja2 template with netconf
+  hosts: west
+  gather_facts: False
+  connection: netconf
+  tasks:
+    - name: Create Configs Directory
+      file: path=configs state=directory
+
+- name: Generate Interface Configs from J2
+  hosts: west
+  gather_facts: False
+  tasks:
+    - name: Generate interface config
+      template:
+        src: "templates/interface_template.j2"
+        dest: "configs/{{inventory_hostname}}.xml"
+      delegate_to: localhost
+

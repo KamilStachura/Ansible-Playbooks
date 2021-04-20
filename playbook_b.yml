@@ -1,0 +1,19 @@
+---
+
+
+- name: Configure DNS & Banner with CLI
+  connection: ansible.netcommon.network_cli
+  gather_facts: no
+  hosts: all
+  vars:
+    dns: "8.8.8.8"
+    banner: "Woah check this Banner!"
+
+  tasks:
+    - name: configure dns
+      cisco.ios.ios_config:
+        lines: ip name-server {{ dns }}
+
+    - name: configure banner
+      cisco.ios.ios_config:
+        lines: banner motd %{{ banner }}%

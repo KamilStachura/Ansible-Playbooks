@@ -1,0 +1,102 @@
+---
+ansible_connection: netconf
+#ansible_connection: network_cli
+
+bgp:
+  id: '65001'
+  rid: 1.1.1.2
+  neighbors:
+  - id: 1.1.1.1
+    as: '65001'
+    loopsource: '0'
+  ipv4_unicast_family:
+  - neighborid: 1.1.1.1
+  networks:
+  - number: 20.20.20.0
+    mask: 255.255.255.0
+
+ospf:
+  id: '1'
+  rid: 1.1.1.2
+  networks:
+  - ip: 1.1.1.2
+    mask: 0.0.0.0
+    area: '0'
+  - ip: 172.168.200.0
+    mask: 0.0.0.255
+    area: '0'
+
+ip:
+  domain: cisco.com
+  tftp_source_gi_int: '1'
+  source_interface: GigabitEthernet1
+  vrf:
+  - name: MGMT
+    description: OOB Management
+  extended_acl:
+  - name: '111'
+    sequences:
+    - number: '10'
+      action: permit
+      protocol: ip
+      srcip: 172.168.200.0
+      srcmask: 0.0.0.255
+      destip: 172.168.100.0
+      destmask: 0.0.0.255
+
+interfaces:
+  GigEthernet:
+  - name: '1'
+    description: OOB Management
+    vrf: MGMT
+    ip: 192.168.78.22
+    mask: 255.255.255.0
+  - name: '2'
+    description: Link ANS2-to-ANS1
+    unnumbered: Loopback0
+    ospf_network: point-to-point
+    crypto_map: ANS2-ANS1-MAP
+  - name: '3'
+    shutdown: 'True'
+  - name: '4'
+    shutdown: 'True'
+
+  Loopback:
+  - name: '0'
+    description: ANS2-id
+    ip: 1.1.1.2
+    mask: 255.255.255.255
+  - name: '20'
+    description: BGP Advertised Loopback
+    ip: 20.20.20.1
+    mask: 255.255.255.0
+  - name: '200'
+    description: VPN LAN ANS2
+    ip: 172.168.200.1
+    mask: 255.255.255.0
+
+crypto:
+  transform_sets:
+  - tag: ANS2-ANS1
+    esp: esp-aes
+    key_bit: '256'
+    esp_hmac: esp-sha512-hmac
+  isakmp_keys:
+  - key: cisco
+    peer: 1.1.1.1
+  policy:
+  - number: '1'
+    auth: pre-share
+    encryption_aes: 256
+    group: '24'
+    hash: sha512
+    lifetime: '3600'
+  crypto_map:
+  - name: ANS2-ANS1-MAP
+    sequence: '1'
+    keying: ipsec-isakmp
+    match: '111'
+    peer: 1.1.1.1
+    pfs: group24
+    transform_set: ANS2-ANS1
+  ssc: '995075595'

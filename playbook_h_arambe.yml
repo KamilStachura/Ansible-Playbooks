@@ -1,0 +1,33 @@
+---
+
+- name: Generate & deploy the configuration with J2
+  hosts: all
+  gather_facts: False
+  connection: netconf
+  vars:
+    feature_list: ["crypto", "enable", "ip", "line", "ntp", "interface", "routing"]
+
+
+
+  tasks:
+    - name: Create Configs Directory
+      file: path=configs state=directory
+
+    - name: Generate J2 interface config
+      template:
+        src: "templates/{{item}}.j2"
+        dest: "configs/{{inventory_hostname}}_{{item}}.xml"
+      delegate_to: localhost
+      loop: "{{ feature_list }}"
+
+    - name: Backup please
+      netconf_config:
+        backup: yes
+        backup_options:
+          dir_path: "backup/{{inventory_hostname}}"
+          filename: "{{inventory_hostname}}_config.{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
+
+    - name: Deploy the J2 config
+      netconf_config:
+        content: "{{lookup('file', 'configs/{{inventory_hostname}}_{{item}}.xml')}}"
+      loop: "{{ feature_list }}"

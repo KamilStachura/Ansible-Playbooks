@@ -1,0 +1,24 @@
+---
+
+- name: Get the running configuration via netconf
+  hosts: west
+  gather_facts: False
+  connection: netconf
+  vars:
+    xpath_filter: /native/router
+  tasks:
+    - name: Get the netconf configs
+      netconf_get:
+        source: running
+        filter: "{{ xpath_filter }}"
+        display: xml
+      register: result
+
+
+    - name: Save the output to a file
+      local_action:
+        module: copy
+        content: "{{ result.output }}"
+        dest: "retrieved_configs/{{ inventory_hostname }}"
+
+

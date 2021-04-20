@@ -1,0 +1,86 @@
+  <config>
+    <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
+      <router operation="replace">
+        {% if bgp is defined %}
+        <bgp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-bgp">
+          <id>{{ bgp.id }}</id>
+          <bgp>
+            <log-neighbor-changes>true</log-neighbor-changes>
+            <router-id>
+              <ip-id>{{ bgp.rid }}</ip-id>
+            </router-id>
+          </bgp>
+          {% for n in bgp.neighbors %}
+          <neighbor>
+            <id>{{ n.id }}</id>
+            <remote-as>{{ n.as }}</remote-as>
+            <update-source>
+              <Loopback>{{ n.loopsource }}</Loopback>
+            </update-source>
+          </neighbor>
+          {% endfor %}
+          <address-family>
+            <no-vrf>
+              <ipv4>
+                <af-name>unicast</af-name>
+                <ipv4-unicast>
+                  {% for n in bgp.ipv4_unicast_family %}
+                  <neighbor>
+                    <id>{{ n.neighborid }}</id>
+                    <activate/>
+                  </neighbor>
+                  {% endfor %}
+                  {% for n in bgp.networks %}
+                  <network>
+                    <with-mask>
+                      <number>{{ n.number }}</number>
+                      <mask>{{ n.mask }}</mask>
+                    </with-mask>
+                  </network>
+                  {% endfor %}
+                </ipv4-unicast>
+              </ipv4>
+            </no-vrf>
+          </address-family>
+        </bgp>
+        {% endif %}
+        {% if ospf is defined %}
+        <ospf xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-ospf">
+          <id>{{ ospf.id }}</id>
+          <router-id>{{ ospf.rid }}</router-id>
+          {% for n in ospf.networks %}
+          <network>
+            <ip>{{ n.ip }}</ip>
+            <mask>{{ n.mask }}</mask>
+            <area>{{ n.area }}</area>
+          </network>
+          {% endfor %}
+        </ospf>
+        {% endif %}
+        {% if eigrp is defined %}
+        <eigrp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-eigrp">
+          <id>{{ eigrp.name }}</id>
+          <address-family>
+            <type>ipv4</type>
+            <af-ip-list>
+              <unicast-multicast>unicast</unicast-multicast>
+              <autonomous-system>{{ eigrp.as }}</autonomous-system>
+              <eigrp>
+                <router-id>{{ eigrp.rid }}</router-id>
+              </eigrp>
+              {% for n in eigrp.networks %}
+              <network>
+                <number>{{ n.number }}</number>
+                <wild-card>{{ n.wildcard }}</wild-card>
+              </network>
+              {% endfor %}
+              <topology>
+                <base/>
+              </topology>
+            </af-ip-list>
+          </address-family>
+        </eigrp>
+        {% endif %}
+      </router>
+    </native>
+  </config>

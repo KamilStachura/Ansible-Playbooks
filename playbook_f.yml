@@ -1,0 +1,23 @@
+---
+
+- name: Generate & Deploy Interface Configs from J2
+  hosts: west
+  gather_facts: False
+  connection: netconf
+  tasks:
+    - name: Create Configs Directory
+      file: path=configs state=directory
+
+    - name: Generate interface config from J2
+      template:
+        src: "templates/interface.j2"
+        dest: "configs/{{inventory_hostname}}.xml"
+      delegate_to: localhost
+
+    - name: Deploy the config
+      netconf_config:
+        backup: yes
+        backup_options:
+          dir_path: "backup/{{inventory_hostname}}"
+          filename: "{{inventory_hostname}}_config.{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
+        content: "{{lookup('file', 'configs/{{inventory_hostname}}_interface.xml')}}"
